@@ -1,19 +1,19 @@
 import socket
 import threading
 
-PORT = 5555
+HEADER = 64
+PORT = 5050
 SERVER = socket.gethostbyname(socket.gethostname())
 ADDR = (SERVER, PORT)
-HEADER = 64
-QUIT_MSG = "\\quit"
 FORMAT = "utf-8"
+QUIT_MSG = "\\quit"
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind(ADDR)
 
 
-def Server(conn, addr):
-    print(f"[NEW CONNECTION] New player {addr}")
+def HandleClient(conn, addr):
+    print(f"[NEW CONNECTION {addr} connected.")
 
     while True:
         msgLength = conn.recv(HEADER).decode(FORMAT)
@@ -24,18 +24,22 @@ def Server(conn, addr):
                 break
 
             print(msg)
+            sendMsg = input("Message: ").encode(FORMAT)
+            conn.send(sendMsg)
 
     conn.close()
-    return
 
 
-def Main():
+def Start():
     server.listen()
+    print(f"[LISTENING] Server is listening on {SERVER}")
     while True:
+        
         conn, addr = server.accept()
-        client = threading.Thread(target=Server, args=(conn, addr))
-        client.start()
+        thread = threading.Thread(target=HandleClient, args=(conn, addr))
+        thread.start()
+        print(f"[ACTIVE CONNECTIONS] {threading.active_count() - 1}")
 
 
-print(f"[SERVER] Server is starting on {SERVER}")
-Main()
+print("[STARTING] server is starting...")
+Start()
